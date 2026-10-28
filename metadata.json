@@ -1,0 +1,6 @@
+{
+  "name": "Theara Blog",
+  "description": "A personal technology blog covering web development, coding tutorials, real-world engineering problems, and professional CV.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

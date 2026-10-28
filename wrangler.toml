@@ -1,0 +1,20 @@
+name = "theara-blog"
+main = "worker/index.js"
+compatibility_date = "2025-01-01"
+
+# Serve the built React Vite app from ./dist
+[assets]
+directory = "./dist"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+# Bind Cloudflare R2 Bucket for images and PDFs
+[[r2_buckets]]
+binding = "MEDIA_BUCKET"
+bucket_name = "theara-blog-media"
+
+[vars]
+SUPABASE_URL = "https://your-project.supabase.co"
+SUPABASE_ANON_KEY = "your-anon-key"
+# Optional custom CDN domain; if empty, Worker uses /cdn/<object_key>
+PUBLIC_CDN_BASE_URL = ""
