@@ -1,20 +1,17 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || '';
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-// Fallback to local storage or dummy if not yet configured
-const savedUrl = typeof window !== 'undefined' ? localStorage.getItem('THEARA_SUPABASE_URL') : null;
-const savedKey = typeof window !== 'undefined' ? localStorage.getItem('THEARA_SUPABASE_KEY') : null;
-
-const finalUrl = supabaseUrl || savedUrl || 'https://placeholder.supabase.co';
-const finalKey = supabaseAnonKey || savedKey || 'placeholder-anon-key';
+const supabaseUrl = (import.meta.env.VITE_SUPABASE_URL || '').trim();
+const supabaseAnonKey = (import.meta.env.VITE_SUPABASE_ANON_KEY || '').trim();
 
 export const isSupabaseConfigured = Boolean(
-  (supabaseUrl && supabaseAnonKey && !supabaseUrl.includes('placeholder')) ||
-  (savedUrl && savedKey)
+  supabaseUrl &&
+  supabaseAnonKey &&
+  !supabaseUrl.includes('placeholder') &&
+  !supabaseUrl.includes('your-project')
 );
+
+const finalUrl = isSupabaseConfigured ? supabaseUrl : 'https://placeholder.supabase.co';
+const finalKey = isSupabaseConfigured ? supabaseAnonKey : 'placeholder-anon-key';
 
 export const supabase = createClient(finalUrl, finalKey, {
   auth: {
@@ -25,3 +22,4 @@ export const supabase = createClient(finalUrl, finalKey, {
 });
 
 export default supabase;
+
