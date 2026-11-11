@@ -94,7 +94,9 @@ export default function Dashboard() {
   // Site settings state
   const [generalSettings, setGeneralSettings] = useState({
     site_title: 'Theara Blog',
-    tagline: '',
+    header_subtitle: 'web dev • coding • tutorials',
+    hero_title: 'Web Development, Coding & Real-World Solutions',
+    tagline: 'Articles about web development, coding tutorials, and real problems from my daily work.',
     author_name: 'Theara',
     author_bio: '',
     avatar_url: '',
@@ -1118,10 +1120,44 @@ export default function Dashboard() {
               </div>
             </div>
 
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Header Subtitle (below logo)
+                </label>
+                <input
+                  type="text"
+                  placeholder="web dev • coding • tutorials"
+                  value={generalSettings.header_subtitle || ''}
+                  onChange={(e) =>
+                    setGeneralSettings({ ...generalSettings, header_subtitle: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold mb-1">
+                  Home Page Heading
+                </label>
+                <input
+                  type="text"
+                  placeholder="Web Development, Coding & Real-World Solutions"
+                  value={generalSettings.hero_title || ''}
+                  onChange={(e) =>
+                    setGeneralSettings({ ...generalSettings, hero_title: e.target.value })
+                  }
+                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white dark:bg-slate-800 dark:border-slate-700"
+                />
+              </div>
+            </div>
+
             <div>
-              <label className="block text-xs font-semibold mb-1">Tagline</label>
+              <label className="block text-xs font-semibold mb-1">
+                Home Page Tagline / Subtitle
+              </label>
               <input
                 type="text"
+                placeholder="Articles about web development, coding tutorials, and real problems from my daily work."
                 value={generalSettings.tagline || ''}
                 onChange={(e) => setGeneralSettings({ ...generalSettings, tagline: e.target.value })}
                 className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white dark:bg-slate-800 dark:border-slate-700"

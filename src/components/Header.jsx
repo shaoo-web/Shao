@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../lib/AuthContext.jsx';
-import { getCategories } from '../lib/api.js';
+import { getCategories, getSiteSettings } from '../lib/api.js';
 import AdSlot from './AdSlot.jsx';
 import { 
   Sun, 
@@ -19,6 +19,7 @@ export default function Header() {
   const location = useLocation();
 
   const [categories, setCategories] = useState([]);
+  const [generalSettings, setGeneralSettings] = useState(null);
   const [isDark, setIsDark] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -53,6 +54,15 @@ export default function Header() {
         if (mounted) setCategories(cats || []);
       })
       .catch((err) => console.warn('Failed to load categories for header:', err));
+
+    getSiteSettings()
+      .then((settings) => {
+        if (mounted && settings?.general) {
+          setGeneralSettings(settings.general);
+        }
+      })
+      .catch((err) => console.warn('Failed to load site settings for header:', err));
+
     return () => {
       mounted = false;
     };
@@ -80,6 +90,9 @@ export default function Header() {
     { name: 'Contact', path: '/contact' },
   ];
 
+  const brandTitle = generalSettings?.site_title || 'Theara.blog';
+  const headerSubtitle = generalSettings?.header_subtitle || 'web dev • coding • tutorials';
+
   return (
     <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 backdrop-blur-md transition-colors dark:border-slate-800 dark:bg-slate-900/90">
       {/* Top Header Ad Slot if present */}
@@ -96,10 +109,16 @@ export default function Header() {
             </div>
             <div className="flex flex-col">
               <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-100">
-                Theara<span className="text-indigo-600 dark:text-indigo-400">.blog</span>
+                {brandTitle === 'Theara.blog' || brandTitle === 'Theara Blog' ? (
+                  <>
+                    Theara<span className="text-indigo-600 dark:text-indigo-400">.blog</span>
+                  </>
+                ) : (
+                  brandTitle
+                )}
               </span>
               <span className="text-[11px] text-slate-500 font-mono hidden sm:inline-block dark:text-slate-400">
-                code • architecture • cases
+                {headerSubtitle}
               </span>
             </div>
           </Link>

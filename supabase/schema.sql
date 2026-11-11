@@ -480,9 +480,11 @@ insert into public.site_settings (key, value)
 values
   ('general', '{
     "site_title": "Theara Blog",
-    "tagline": "Software engineering, modern web craft, and real-world production stories",
+    "header_subtitle": "web dev • coding • tutorials",
+    "hero_title": "Web Development, Coding & Real-World Solutions",
+    "tagline": "Articles about web development, coding tutorials, and real problems from my daily work.",
     "author_name": "Theara",
-    "author_bio": "Full-stack engineer passionate about JavaScript, modern web architecture, and clean user experiences.",
+    "author_bio": "Full-stack developer writing about web development, coding tutorials, and practical engineering solutions.",
     "avatar_url": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80",
     "cv_pdf_url": "",
     "social_github": "https://github.com",

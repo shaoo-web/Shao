@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { getPosts } from '../lib/api.js';
+import { getPosts, getSiteSettings } from '../lib/api.js';
 import Sidebar from '../components/Sidebar.jsx';
 import { Calendar, Clock, Eye, ChevronLeft, ChevronRight, BookOpen, ArrowRight } from 'lucide-react';
 
@@ -12,6 +12,21 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [generalSettings, setGeneralSettings] = useState(null);
+
+  useEffect(() => {
+    let mounted = true;
+    getSiteSettings()
+      .then((settings) => {
+        if (mounted && settings?.general) {
+          setGeneralSettings(settings.general);
+        }
+      })
+      .catch((err) => console.warn('Failed to load site settings:', err));
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -49,6 +64,12 @@ export default function Home() {
     ? posts.filter((p) => p.id !== featuredPost.id)
     : posts;
 
+  const heroTitle =
+    generalSettings?.hero_title || 'Web Development, Coding & Real-World Solutions';
+  const heroSubtitle =
+    generalSettings?.tagline ||
+    'Articles about web development, coding tutorials, and real problems from my daily work.';
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
       {/* Main Articles Feed */}
@@ -56,10 +77,10 @@ export default function Home() {
         {/* Page Title & Intro */}
         <div className="border-b border-slate-200 pb-5 dark:border-slate-800">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-            Engineering & Web Insights
+            {heroTitle}
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-            Real software architecture, front-end craftsmanship, and production post-mortems.
+            {heroSubtitle}
           </p>
         </div>
 
