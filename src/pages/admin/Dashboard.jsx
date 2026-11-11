@@ -23,7 +23,9 @@ import {
   deleteContactMessage,
   getSiteSettings,
   updateSiteSetting,
+  updateProfile,
 } from '../../lib/api.js';
+import { useAuth } from '../../lib/AuthContext.jsx';
 import {
   FileText,
   FileEdit,
@@ -45,6 +47,7 @@ import {
 } from 'lucide-react';
 
 export default function Dashboard() {
+  const { user, refreshProfile } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const activeTab = searchParams.get('tab') || 'overview';
 
@@ -101,6 +104,8 @@ export default function Dashboard() {
     social_twitter: '',
   });
   const [savingSettings, setSavingSettings] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadingCvPdf, setUploadingCvPdf] = useState(false);
 
   const showNotice = (type, text) => {
     setFeedback({ type, text });
@@ -329,12 +334,84 @@ export default function Dashboard() {
     }
   };
 
-  // Settings Handler
+  // Settings Handlers
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingAvatar(true);
+      const uploaded = await uploadFile(
+        file,
+        `${generalSettings.author_name || 'Admin'} Profile Photo`
+      );
+      if (uploaded?.public_url) {
+        const updatedSettings = {
+          ...generalSettings,
+          avatar_url: uploaded.public_url,
+        };
+        setGeneralSettings(updatedSettings);
+        await updateSiteSetting('general', updatedSettings);
+        if (user?.id) {
+          try {
+            await updateProfile(user.id, { avatar_url: uploaded.public_url });
+            await refreshProfile();
+          } catch (profileErr) {
+            console.warn('Could not sync profile avatar:', profileErr);
+          }
+        }
+        showNotice('success', 'Profile photo uploaded and saved!');
+      }
+    } catch (err) {
+      showNotice('error', err.message || 'Photo upload failed.');
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = '';
+    }
+  };
+
+  const handleCvPdfUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      setUploadingCvPdf(true);
+      const uploaded = await uploadFile(
+        file,
+        `${generalSettings.author_name || 'Admin'} CV PDF`
+      );
+      if (uploaded?.public_url) {
+        const updatedSettings = {
+          ...generalSettings,
+          cv_pdf_url: uploaded.public_url,
+        };
+        setGeneralSettings(updatedSettings);
+        await updateSiteSetting('general', updatedSettings);
+        showNotice('success', 'CV PDF uploaded and saved!');
+      }
+    } catch (err) {
+      showNotice('error', err.message || 'CV PDF upload failed.');
+    } finally {
+      setUploadingCvPdf(false);
+      e.target.value = '';
+    }
+  };
+
   const handleSaveSettings = async (e) => {
     e.preventDefault();
     try {
       setSavingSettings(true);
       await updateSiteSetting('general', generalSettings);
+      if (user?.id) {
+        try {
+          await updateProfile(user.id, {
+            full_name: generalSettings.author_name || '',
+            bio: generalSettings.author_bio || '',
+            avatar_url: generalSettings.avatar_url || '',
+          });
+          await refreshProfile();
+        } catch (profileErr) {
+          console.warn('Could not sync profile table:', profileErr);
+        }
+      }
       showNotice('success', 'Site settings saved.');
     } catch (err) {
       showNotice('error', err.message);
@@ -1061,24 +1138,123 @@ export default function Dashboard() {
               />
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-semibold mb-1">Avatar Image URL</label>
-                <input
-                  type="url"
-                  value={generalSettings.avatar_url || ''}
-                  onChange={(e) => setGeneralSettings({ ...generalSettings, avatar_url: e.target.value })}
-                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white dark:bg-slate-800 dark:border-slate-700"
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-1">
+              {/* Profile Photo Upload + URL */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-3 dark:border-slate-800 dark:bg-slate-800/40">
+                <label className="block text-xs font-semibold text-slate-900 dark:text-white">
+                  Profile Photo (Avatar)
+                </label>
+
+                <div className="flex items-center space-x-4">
+                  {generalSettings.avatar_url ? (
+                    <img
+                      src={generalSettings.avatar_url}
+                      alt={generalSettings.author_name || 'Profile'}
+                      className="w-16 h-16 rounded-full object-cover border-2 border-indigo-500/30 bg-slate-200 dark:bg-slate-700 shrink-0"
+                    />
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300 flex items-center justify-center text-lg font-extrabold shrink-0">
+                      {(generalSettings.author_name || 'T').charAt(0).toUpperCase()}
+                    </div>
+                  )}
+
+                  <div className="space-y-2 flex-1 min-w-0">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold shadow-2xs transition-colors">
+                        <Upload className="w-3.5 h-3.5" />
+                        <span>{uploadingAvatar ? 'Uploading...' : 'Upload Photo File'}</span>
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleAvatarUpload}
+                          disabled={uploadingAvatar}
+                          className="hidden"
+                        />
+                      </label>
+
+                      {generalSettings.avatar_url && (
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setGeneralSettings({ ...generalSettings, avatar_url: '' })
+                          }
+                          className="px-2.5 py-1.5 rounded-lg border border-slate-300 hover:border-rose-400 text-xs font-medium text-rose-600 dark:border-slate-700 dark:text-rose-400"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      Uploads via Worker API (<code className="font-mono">/api/upload</code>) to Cloudflare R2, or paste a direct image URL below.
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    Avatar Image URL
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={generalSettings.avatar_url || ''}
+                    onChange={(e) =>
+                      setGeneralSettings({ ...generalSettings, avatar_url: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
               </div>
-              <div>
-                <label className="block text-xs font-semibold mb-1">CV PDF Download Link</label>
-                <input
-                  type="url"
-                  value={generalSettings.cv_pdf_url || ''}
-                  onChange={(e) => setGeneralSettings({ ...generalSettings, cv_pdf_url: e.target.value })}
-                  className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white dark:bg-slate-800 dark:border-slate-700"
-                />
+
+              {/* CV PDF Upload + URL */}
+              <div className="rounded-xl border border-slate-200 bg-slate-50/60 p-4 space-y-3 flex flex-col justify-between dark:border-slate-800 dark:bg-slate-800/40">
+                <div className="space-y-2">
+                  <label className="block text-xs font-semibold text-slate-900 dark:text-white">
+                    CV / Resume PDF File
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="cursor-pointer inline-flex items-center space-x-1.5 px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold dark:bg-slate-700 dark:hover:bg-slate-600 transition-colors">
+                      <Upload className="w-3.5 h-3.5" />
+                      <span>{uploadingCvPdf ? 'Uploading PDF...' : 'Upload PDF File'}</span>
+                      <input
+                        type="file"
+                        accept="application/pdf"
+                        onChange={handleCvPdfUpload}
+                        disabled={uploadingCvPdf}
+                        className="hidden"
+                      />
+                    </label>
+                    {generalSettings.cv_pdf_url && (
+                      <a
+                        href={generalSettings.cv_pdf_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center space-x-1 text-xs font-semibold text-indigo-600 hover:underline dark:text-indigo-400"
+                      >
+                        <span>Preview PDF</span>
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                    Upload your latest CV PDF to Cloudflare R2 or paste an external link.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-[11px] font-medium text-slate-500 dark:text-slate-400 mb-1">
+                    CV PDF Download Link
+                  </label>
+                  <input
+                    type="url"
+                    placeholder="https://..."
+                    value={generalSettings.cv_pdf_url || ''}
+                    onChange={(e) =>
+                      setGeneralSettings({ ...generalSettings, cv_pdf_url: e.target.value })
+                    }
+                    className="w-full px-3 py-2 text-xs rounded-lg border border-slate-300 bg-white dark:bg-slate-800 dark:border-slate-700"
+                  />
+                </div>
               </div>
             </div>
 

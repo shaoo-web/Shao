@@ -21,7 +21,7 @@ import {
   X,
 } from 'lucide-react';
 
-export default function AdminLayout({ children }) {
+export default function AdminLayout({ children = null }) {
   const { user, profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();

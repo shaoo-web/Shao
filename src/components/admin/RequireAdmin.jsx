@@ -1,7 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../../lib/AuthContext.jsx';
 
-export default function RequireAdmin({ children }) {
+export default function RequireAdmin({ children = null }) {
   const { user, isAdmin, loading } = useAuth();
   const location = useLocation();
 
